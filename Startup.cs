@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using InterviuW.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -32,7 +33,7 @@ namespace InterviuW
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "InterviuW", Version = "v1" });
             });
-            services.AddSingleton<Storage>();
+            services.AddSingleton<IStorage>(new Storage());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

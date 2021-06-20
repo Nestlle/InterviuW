@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using InterviuW.DAO;
+using InterviuW.Exceptions;
+using InterviuW.Interfaces;
 using InterviuW.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+using Microsoft.Net.Http.Headers;
 
 namespace InterviuW.Controllers
 {
@@ -10,42 +13,53 @@ namespace InterviuW.Controllers
     [Route("tickets")]
     public class TicketsController : ControllerBase
     {
-        private readonly ILogger<TicketsController> _logger;
-        private readonly Storage _storage;
+        private readonly IStorage _storage;
 
-        public TicketsController(ILogger<TicketsController> logger, Storage storage)
+        public TicketsController(IStorage storage)
         {
-            _logger = logger;
             _storage = storage;
         }
 
         [HttpGet]
-        [Route("getAllTickets")]
-        public IActionResult GetAllTickets()
+        [Route("getTicketsInformations")]
+        public IActionResult GetTicketsInformations()
         {
-            return StatusCode(200, _storage.GetStorage());
+            ITicketDao ticketDao = new TicketDao(_storage);
+            return StatusCode(200, ticketDao.Select());
         }
 
         [HttpPost]
         [Route("modifyTickets")]
-        public IActionResult ModifyTickets([FromQuery] int organiserId,
-            [FromQuery] int eventId,
-            [FromBody] List<Ticket> tickets )
+        public IActionResult ModifyTickets([FromQuery] int eventId, [FromBody] List<Ticket> tickets )
         {
+            string apiKey = Request.Headers[HeaderNames.Authorization].ToString().Split(" ")[1];
+            IEventDao eventDao = new EventDao(_storage);
+            ITicketDao ticketDao = new TicketDao(_storage);
+            ITokenDao tokenDao = new TokenDao(_storage);
+
             try
             {
-                if(!_storage.GetStorage().Exists(x => x.OrganiserId == organiserId))
-                    return StatusCode(400, new ErrorResponse(){
-                        StatusCode = 400,
-                        Message = $"Cannot find any organiser id with key : {organiserId}"}
-                    );
-                _storage.ModifyTickets(organiserId, eventId, tickets, out List<Ticket> newTickets);
-
-                return StatusCode(200, 
+                int organiserId = tokenDao.GetOrganiserId(apiKey);
+                ticketDao.Update(eventDao.Find((int)organiserId, eventId), tickets, out List<Ticket> newTickets);
+                return StatusCode(200,
                     new {
-                        Message = $"Modified {tickets.Count} for eventID : {eventId}"
+                        Message = $"Modified {tickets.Count} for eventID : {eventId}."
                     }
                 );
+            }
+            catch(OrganiserNotFoundException e)
+            {
+                return StatusCode(403, new ErrorResponse(){
+                        StatusCode = 403,
+                        Message = e.Message
+                });
+            }
+            catch(OrganiserNotOwnerException e)
+            {
+                return StatusCode(403, new ErrorResponse(){
+                        StatusCode = 403,
+                        Message = e.Message
+                });
             }
             catch(Exception e)
             {

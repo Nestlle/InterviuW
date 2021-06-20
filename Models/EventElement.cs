@@ -2,9 +2,9 @@ using System.Collections.Generic;
 
 namespace InterviuW.Models
 {
-    public class StorageElement
+    public class EventElement
     {
-        public StorageElement(int organiserId)
+        public EventElement(int organiserId)
         {
             OrganiserId = organiserId;
             Events = new List<Event>();

@@ -1,16 +1,22 @@
 using System.Collections.Generic;
+using InterviuW.DAO;
+using InterviuW.Interfaces;
 using InterviuW.Models;
 using Microsoft.AspNetCore.Mvc;
 
+/// <summary>
+/// Controller used just to fill the storage.
+/// Not part of the project.
+/// </summary>
 namespace InterviuW.Controllers
 {
     [ApiController]
     [Route("storage")]
     public class StorageController : ControllerBase
     {
-        private Storage _storage;
+        private IStorage _storage;
 
-        public StorageController(Storage storage)
+        public StorageController(IStorage storage)
         {
             _storage = storage;
         }
@@ -64,12 +70,22 @@ namespace InterviuW.Controllers
                 Price = 200,
                 Type = Models.Enums.TicketType.Vip
             };
-            _storage.AddEvent(11234, ev);
-            _storage.AddEvent(11234, ev2);
-            _storage.AddTicket(11234, 1234, ticket1);
-            _storage.AddTicket(11234, 1234, ticket2);
-            _storage.AddTicket(11234, 44556, ticket3);
-            _storage.AddTicket(11234, 44556, ticket4);
+            EventDao eventDao = new EventDao(_storage);
+            TicketDao ticketDao = new TicketDao(_storage);
+            TokenDao tokenDao = new TokenDao(_storage);
+            eventDao.Insert(11234, ev);
+            eventDao.Insert(11234, ev2);
+            ticketDao.Insert(eventDao.Find(11234, 1234), ticket1);
+            ticketDao.Insert(eventDao.Find(11234, 1234), ticket2);
+            ticketDao.Insert(eventDao.Find(11234, 1234), ticket3);
+            ticketDao.Insert(eventDao.Find(11234, 1234), ticket4);
+
+            Token token = new Token();
+            token.ApiToken = "qwekasjdj127318273#%$%#^$hasjhd";
+            token.OrganiserId = 11234;
+            token.ExpirationDate = System.DateTime.Now.AddHours(1);
+
+            tokenDao.Insert(token);
             return Ok();
         }
     }

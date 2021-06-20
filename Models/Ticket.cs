@@ -1,13 +1,14 @@
-using System;
+using System.ComponentModel.DataAnnotations;
 using InterviuW.Models.Enums;
 namespace InterviuW.Models
 {
     public class Ticket
     {
-        public TicketType Type { get; set; }
+        [Required]
+        public TicketType? Type { get; set; }
         public CurrencyType Currency{get;set;}
-        public double Price { get; set; }
+        public double? Price { get; set; }
         public string Description { get; set; }
-        public int NumberOfCopies { get; set; }
+        public int? NumberOfCopies { get; set; }
     }
 }
